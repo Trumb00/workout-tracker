@@ -23,35 +23,9 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Refresh session — required for Server Components to read auth state
-  const { data: { user } } = await supabase.auth.getUser()
-
-  const { pathname } = request.nextUrl
-
-  // Protect all /dashboard, /templates, /log, /history, /progress, /records routes
-  const protectedPaths = ['/dashboard', '/templates', '/log', '/history', '/progress', '/records']
-  const isProtected = protectedPaths.some((p) => pathname.startsWith(p))
-
-  if (isProtected && !user) {
-    const loginUrl = request.nextUrl.clone()
-    loginUrl.pathname = '/login'
-    const redirectResponse = NextResponse.redirect(loginUrl)
-    supabaseResponse.cookies.getAll().forEach((cookie) => {
-      redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
-    })
-    return redirectResponse
-  }
-
-  // Redirect logged-in users away from auth pages
-  if ((pathname === '/login' || pathname === '/signup') && user) {
-    const dashboardUrl = request.nextUrl.clone()
-    dashboardUrl.pathname = '/dashboard'
-    const redirectResponse = NextResponse.redirect(dashboardUrl)
-    supabaseResponse.cookies.getAll().forEach((cookie) => {
-      redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
-    })
-    return redirectResponse
-  }
+  // Refresh session so Server Components can read updated auth state.
+  // No redirects here — auth gating is handled by (app)/layout.tsx and app/page.tsx.
+  await supabase.auth.getUser()
 
   return supabaseResponse
 }
