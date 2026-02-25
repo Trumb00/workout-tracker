@@ -35,14 +35,22 @@ export async function middleware(request: NextRequest) {
   if (isProtected && !user) {
     const loginUrl = request.nextUrl.clone()
     loginUrl.pathname = '/login'
-    return NextResponse.redirect(loginUrl)
+    const redirectResponse = NextResponse.redirect(loginUrl)
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+    })
+    return redirectResponse
   }
 
   // Redirect logged-in users away from auth pages
   if ((pathname === '/login' || pathname === '/signup') && user) {
     const dashboardUrl = request.nextUrl.clone()
     dashboardUrl.pathname = '/dashboard'
-    return NextResponse.redirect(dashboardUrl)
+    const redirectResponse = NextResponse.redirect(dashboardUrl)
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+    })
+    return redirectResponse
   }
 
   return supabaseResponse
